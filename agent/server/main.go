@@ -2,15 +2,21 @@ package main
 
 import (
 	"fmt"
+	"freshli-agent-syft/agent/internal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"os"
 	"strconv"
 )
+
+type agentServer struct {
+	internal.UnimplementedAgentServer
+}
 
 func main() {
 	port, err := parsePortArgument()
@@ -27,6 +33,8 @@ func main() {
 	s := grpc.NewServer()
 	healthcheck := health.NewServer()
 	healthgrpc.RegisterHealthServer(s, healthcheck)
+	internal.RegisterAgentServer(s, &agentServer{})
+	healthcheck.SetServingStatus(internal.Agent_ServiceDesc.ServiceName, healthpb.HealthCheckResponse_SERVING)
 
 	// TODO should this be only in dev/debug mode?
 	reflection.Register(s)
