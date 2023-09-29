@@ -1,8 +1,6 @@
-package main
+package cmd
 
 import (
-	_ "modernc.org/sqlite"
-
 	"github.com/anchore/clio"
 	"github.com/anchore/syft/cmd/syft/cli"
 )
@@ -11,18 +9,16 @@ const (
 	NotProvided = "[not provided]"
 )
 
-const applicationName = "freshli-agent-syft"
+const applicationName = "syft"
 
-func main() {
-	app := cli.Application(
-		clio.Identification{
+func init() {
+	rootCmd.AddCommand(
+		cli.Command(clio.Identification{
 			Name:           applicationName,
 			Version:        NotProvided,
 			BuildDate:      NotProvided,
 			GitCommit:      NotProvided,
 			GitDescription: NotProvided,
-		},
+		}),
 	)
-
-	app.Run()
 }
