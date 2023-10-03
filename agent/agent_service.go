@@ -1,4 +1,4 @@
-package main
+package agent
 
 import (
 	"fmt"
@@ -10,43 +10,30 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	"os"
-	"strconv"
 )
+
+var grpcServer = grpc.NewServer()
 
 type agentServer struct {
 	internal.UnimplementedAgentServer
 }
 
-func main() {
-	port, err := parsePortArgument()
-	if err != nil || port < 0 {
-		log.Fatalf("port is required: %v", err)
-		return
-	}
+func StartAgentService(port int) {
+
 	log.Printf("gRPC server listening on %d", port)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer()
 	healthcheck := health.NewServer()
-	healthgrpc.RegisterHealthServer(s, healthcheck)
-	internal.RegisterAgentServer(s, &agentServer{})
+	healthgrpc.RegisterHealthServer(grpcServer, healthcheck)
+	internal.RegisterAgentServer(grpcServer, &agentServer{})
 	healthcheck.SetServingStatus(internal.Agent_ServiceDesc.ServiceName, healthpb.HealthCheckResponse_SERVING)
 
 	// TODO should this be only in dev/debug mode?
-	reflection.Register(s)
-
-	if err := s.Serve(lis); err != nil {
+	reflection.Register(grpcServer)
+	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-}
-
-func parsePortArgument() (int, error) {
-	if len(os.Args) > 1 {
-		return strconv.Atoi(os.Args[1])
-	}
-	return -1, nil
 }
