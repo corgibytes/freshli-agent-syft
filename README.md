@@ -1,4 +1,4 @@
-# Freshli Agent: Java
+# Freshli Agent: Syft
 
 This application is used by the [`freshli` CLI](https://github.com/corgibytes/freshli-cli) to detect and process manifest files with the Syft processor.
 
